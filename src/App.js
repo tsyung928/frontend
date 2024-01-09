@@ -1,25 +1,33 @@
-import logo from './logo.svg';
+import React, { Component } from 'react';
 import './App.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Button from '@mui/material/Button'; //importing material ui component
+import Header from './components/navBar/NavBar';
+import MarkHomework from './components/MarkHomework';
+import ClassPerformance from './components/ClassPerformance';
+import Profile from './components/Profile';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+        return (
+            <BrowserRouter>
+                <Header />
+                <Routes>
+                    <Route path="/MarkHomework" element={<MarkHomework />}></Route>
+                    <Route path="/ClassPerformance" element={<ClassPerformance />}></Route>
+                    <Route path="/Profile" element={<Profile />}></Route>
+                </Routes>
+            </BrowserRouter>
 
+        );
+        //   <div className="App">
+        //     <Header />
+        //
+        //       <Button> Press me </Button>
+        //
+        //
+        //
+        //   </div>
+        // );
+
+}
 export default App;
