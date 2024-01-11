@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { Box, Tab, Tabs, TextField, MenuItem, Button, Typography } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Box, Tab, Tabs, TextField, MenuItem, Button, Typography, List, ListItem, ListItemText, Input } from '@mui/material';
 import { TabContext, TabPanel } from '@mui/lab';
 import { TextareaAutosize } from '@mui/base/TextareaAutosize';
 
-
 function MarkHomeworkPage() {
     // State for tabs
+    const location = useLocation();
     const [value, setValue] = useState('1');
 
     // State for "Create New Homework" form
@@ -18,6 +19,25 @@ function MarkHomeworkPage() {
     const [selectedHomework, setSelectedHomework] = useState('');
     const [homeworkOptions, setHomeworkOptions] = useState([]);
     const [existingMarkingRubrics, setExistingMarkingRubrics] = useState('');
+
+    // State for handling uploaded files
+    const [uploads, setUploads] = useState({});
+
+    // States for creating homework
+    const [isHomeworkCreated, setIsHomeworkCreated] = useState(false);
+    const [homeworkDetails, setHomeworkDetails] = useState({ class: '', title: '', rubrics: '' })
+    const [students, setStudents] = useState([]);
+
+    useEffect(() => {
+        // Check if the current path is '/MarkHomework'
+        if (location.pathname === '/MarkHomework') {
+            // Reset state here
+            setNewClass('');
+            setHomeworkTitle('');
+            setMarkingRubrics('');
+            // Reset other states as needed
+        }
+    }, [location]);
 
     const handleChange = (event, newValue) => {
         setValue(newValue);
@@ -59,11 +79,6 @@ function MarkHomeworkPage() {
         setExistingMarkingRubrics(event.target.value);
     };
 
-    const createHomework = async () => {
-        // Implement your create logic here
-        // Add your own API call or backend interaction here
-        console.log("Homework Created");
-    };
 
     const updateRubrics = async () => {
         // Implement your update logic here
@@ -77,6 +92,37 @@ function MarkHomeworkPage() {
         console.log("Homework Deleted");
     };
 
+    const createHomework = () => {
+        // Logic to create the Homework
+        // For example, making an API call to create the Homework and then fetch the list of students
+        setIsHomeworkCreated(true);
+        console.log("Homework Created");
+
+        // Mock data for students
+        const mockStudents = [
+            { id: 1, name: 'Student 1', number: '1001' },
+            { id: 2, name: 'Student 2', number: '1002' },
+            // ... more students
+        ];
+
+        setStudents(mockStudents);
+    };
+
+    const handleInputChange = (field, value) => {
+        setHomeworkDetails({ ...homeworkDetails, [field]: value });
+    };
+
+    const handleFileUpload = (studentId, file) => {
+        // Logic to handle file upload
+        // For example, you might want to make an API call to upload the file
+
+        setUploads({ ...uploads, [studentId]: file });
+    };
+
+    const handleBack = () => {
+        setIsHomeworkCreated(false);
+    };
+
     return (
         <Box sx={{ width: '100%', typography: 'body1' }}>
             <TabContext value={value}>
@@ -87,43 +133,117 @@ function MarkHomeworkPage() {
                     </Tabs>
                 </Box>
                 <TabPanel value="1">
-                    {/* Create New Homework Content */}
-                    <TextField
-                        select
-                        label="Class"
-                        value={newClass}
-                        onChange={handleNewClassChange}
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                    >
-                        <MenuItem value="10">Class 10</MenuItem>
-                        <MenuItem value="20">Class 20</MenuItem>
-                    </TextField>
-                    <TextField
-                        label="Homework Title"
-                        value={homeworkTitle}
-                        onChange={handleHomeworkTitleChange}
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Marking Rubrics"
-                        value={markingRubrics}
-                        onChange={handleMarkingRubricsChange}
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                        InputProps={{
-                            inputComponent: TextareaAutosize,
-                            inputProps: {
-                                minRows: 3,
-                                style: { resize: 'vertical' },
-                            },
-                        }}
-                    />
-                    <Button variant="contained" sx={{ mt: 2 }} onClick={createHomework}>Create Homework</Button>
+                    {isHomeworkCreated ? (
+                        <Box>
+                            <TextField
+                                label="Class"
+                                value={newClass}
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                InputProps={{
+                                    readOnly: true,
+                                }}
+                                sx={{
+                                    backgroundColor: 'rgba(0, 0, 0, 0.09)', // Dim background
+                                    cursor: 'not-allowed', // "Not allowed" cursor
+                                    '& .MuiInputBase-input': {
+                                        cursor: 'not-allowed', // "Not allowed" cursor for the input field
+                                    }
+                                }}
+                            />
+                            <TextField
+                                label="Homework Title"
+                                value={homeworkTitle}
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                InputProps={{
+                                    readOnly: true,
+                                }}
+                                sx={{
+                                    backgroundColor: 'rgba(0, 0, 0, 0.09)', // Dim background
+                                    cursor: 'not-allowed', // "Not allowed" cursor
+                                    '& .MuiInputBase-input': {
+                                        cursor: 'not-allowed', // "Not allowed" cursor for the input field
+                                    }
+                                }}
+                            />
+                            <TextField
+                                label="Marking Rubrics"
+                                value={markingRubrics}
+                                onChange={handleMarkingRubricsChange}
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                InputProps={{
+                                    readOnly: true,
+                                    inputComponent: TextareaAutosize,
+                                    inputProps: {
+                                        minRows: 3,
+                                        style: { resize: 'vertical' },
+                                    },
+                                }}
+                                sx={{
+                                    backgroundColor: 'rgba(0, 0, 0, 0.09)', // Dim background
+                                    cursor: 'not-allowed', // "Not allowed" cursor
+                                    '& .MuiInputBase-input': {
+                                        cursor: 'not-allowed', // "Not allowed" cursor for the input field
+                                    }
+                                }}
+                            />
+
+                            <List>
+                                {students.map((student) => (
+                                    <ListItem key={student.id}>
+                                        <ListItemText primary={`${student.name} (${student.number})`} />
+                                        <Input type="file" onChange={(e) => handleFileUpload(student.id, e.target.files[0])} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                            <Button variant="contained" sx={{ mt: 2 }}>Start Marking</Button>
+                            <Button variant="outlined" sx={{ mt: 2, ml: 2 }} onClick={handleBack}>Back</Button>
+                        </Box>
+                    ) : (
+                        <Box>
+                            <TextField
+                                select
+                                label="Class"
+                                value={newClass}
+                                onChange={handleNewClassChange}
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                            >
+                                <MenuItem value="10">Class 10</MenuItem>
+                                <MenuItem value="20">Class 20</MenuItem>
+                            </TextField>
+                            <TextField
+                                label="Homework Title"
+                                value={homeworkTitle}
+                                onChange={handleHomeworkTitleChange}
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                            />
+                            <TextField
+                                label="Marking Rubrics"
+                                value={markingRubrics}
+                                onChange={handleMarkingRubricsChange}
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                InputProps={{
+                                    inputComponent: TextareaAutosize,
+                                    inputProps: {
+                                        minRows: 3,
+                                        style: { resize: 'vertical' },
+                                    },
+                                }}
+                            />
+                            <Button variant="contained" sx={{ mt: 2 }} onClick={createHomework}>Create Homework</Button>
+                        </Box>
+                    )}
                 </TabPanel>
                 <TabPanel value="2">
                     {/* Mark Existing Homework Content */}

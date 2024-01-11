@@ -19,15 +19,6 @@ function App() {
             </BrowserRouter>
 
         );
-        //   <div className="App">
-        //     <Header />
-        //
-        //       <Button> Press me </Button>
-        //
-        //
-        //
-        //   </div>
-        // );
 
 }
 export default App;
