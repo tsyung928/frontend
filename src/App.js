@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Button from '@mui/material/Button'; //importing material ui component
 import Header from './components/navBar/NavBar';
 import MarkHomework from './components/MarkHomework';
 import ClassPerformance from './components/ClassPerformance';
