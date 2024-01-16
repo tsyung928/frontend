@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Box, Tab, Tabs, TextField, MenuItem, Button, Typography, List, ListItem, ListItemText, Input } from '@mui/material';
 import { TabContext, TabPanel } from '@mui/lab';
 import { TextareaAutosize } from '@mui/base/TextareaAutosize';
+import { useNavigate } from 'react-router-dom';
 
 function MarkHomeworkPage() {
     // State for tabs
@@ -26,7 +27,10 @@ function MarkHomeworkPage() {
     // States for creating homework
     const [isHomeworkCreated, setIsHomeworkCreated] = useState(false);
     const [homeworkDetails, setHomeworkDetails] = useState({ class: '', title: '', rubrics: '' })
-    const [students, setStudents] = useState([]);
+    //const [students, setStudents] = useState([]);
+
+    //States for navigation
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Check if the current path is '/MarkHomework'
@@ -100,17 +104,16 @@ function MarkHomeworkPage() {
 
         // Mock data for students
         const mockStudents = [
-            { id: 1, name: 'Student 1', number: '1001' },
-            { id: 2, name: 'Student 2', number: '1002' },
+            //{ id: 1, name: 'Student 1', number: '1001' },
+            //{ id: 2, name: 'Student 2', number: '1002' },
+            { id: 1, name: 'Student 1', number: '1001', grade: 'A', comments: 'Excellent!' },
+            { id: 2, name: 'Student 2', number: '1002', grade: 'B', comments: 'Good effort, but needs improvement on structure.' },
             // ... more students
         ];
 
         setStudents(mockStudents);
     };
 
-    const handleInputChange = (field, value) => {
-        setHomeworkDetails({ ...homeworkDetails, [field]: value });
-    };
 
     const handleFileUpload = (studentId, file) => {
         // Logic to handle file upload
@@ -122,6 +125,23 @@ function MarkHomeworkPage() {
     const handleBack = () => {
         setIsHomeworkCreated(false);
     };
+
+    const [students, setStudents] = useState([
+        // Dummy initial student data
+        { id: 1, name: 'Student 1', number: '1001', grade: 'A', comments: 'Excellent work!' },
+        { id: 2, name: 'Student 2', number: '1002', grade: 'B', comments: 'Good effort, but needs improvement on structure.' },
+        // ... other students
+    ]);
+
+    // Function to handle the "Start Marking" button click
+    const startMarking = () => {
+        // Here you would normally fetch the grades and comments from an API
+        // For now, we're using the dummy data already set in the state
+
+        // Navigate to the Grades Display Page
+        navigate('/gradesdisplay', { state: { students } });
+    };
+
 
     return (
         <Box sx={{ width: '100%', typography: 'body1' }}>
@@ -201,7 +221,7 @@ function MarkHomeworkPage() {
                                     </ListItem>
                                 ))}
                             </List>
-                            <Button variant="contained" sx={{ mt: 2 }}>Start Marking</Button>
+                            <Button variant="contained" sx={{ mt: 2}} onClick={startMarking}>Start Marking</Button>
                             <Button variant="outlined" sx={{ mt: 2, ml: 2 }} onClick={handleBack}>Back</Button>
                         </Box>
                     ) : (
@@ -244,6 +264,8 @@ function MarkHomeworkPage() {
                             <Button variant="contained" sx={{ mt: 2 }} onClick={createHomework}>Create Homework</Button>
                         </Box>
                     )}
+
+
                 </TabPanel>
                 <TabPanel value="2">
                     {/* Mark Existing Homework Content */}
