@@ -1,17 +1,67 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Box, Tab, Tabs, TextField, MenuItem, Button, Typography, List, ListItem, ListItemText, Input } from '@mui/material';
-import { TabContext, TabPanel } from '@mui/lab';
-import { TextareaAutosize } from '@mui/base/TextareaAutosize';
-import { useNavigate } from 'react-router-dom';
+import React, {useEffect, useState} from 'react';
+import {useLocation} from 'react-router-dom';
+import {
+    Box,
+    Tab,
+    Tabs,
+    TextField,
+    MenuItem,
+    Button,
+    Typography,
+    List,
+    ListItem,
+    ListItemText,
+    Input
+} from '@mui/material';
+import {TabContext, TabPanel} from '@mui/lab';
+import {TextareaAutosize} from '@mui/base/TextareaAutosize';
+import {useNavigate} from 'react-router-dom';
+
+
+// function sendData(data) {
+//     return new Promise((resolve, reject) => {
+//     fetch('http://127.0.0.1:5000/save-data', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify(data),
+//     })
+//         .then(response => response.json())
+//         .then(data => console.log('Success:', data))
+//         .catch((error) => console.error('Error:', error));}
+// }
+function sendAssignment(data) {
+    return new Promise((resolve, reject) => {
+        fetch('http://127.0.0.1:5000/assignment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+            .then(response => {
+                if (response.ok) {
+                    resolve();
+                } else {
+                    reject(new Error('Network response was not ok.'));
+                }
+            })
+            .catch(error => reject(error));
+    });
+}
+
 
 function MarkHomeworkPage() {
+
+    const teacherUsername = "AppleMa";
     // State for tabs
     const location = useLocation();
     const [value, setValue] = useState('1');
 
     // State for "Create New Homework" form
     const [newClass, setNewClass] = useState('');
+    const [classes, setClasses] = useState([]);
     const [homeworkTitle, setHomeworkTitle] = useState('');
     const [markingRubrics, setMarkingRubrics] = useState('');
 
@@ -26,7 +76,7 @@ function MarkHomeworkPage() {
 
     // States for creating homework
     const [isHomeworkCreated, setIsHomeworkCreated] = useState(false);
-    const [homeworkDetails, setHomeworkDetails] = useState({ class: '', title: '', rubrics: '' })
+    const [homeworkDetails, setHomeworkDetails] = useState({class: '', title: '', rubrics: ''})
     //const [students, setStudents] = useState([]);
 
     //States for navigation
@@ -43,6 +93,8 @@ function MarkHomeworkPage() {
         }
     }, [location]);
 
+
+
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };
@@ -57,6 +109,30 @@ function MarkHomeworkPage() {
     const handleMarkingRubricsChange = (event) => {
         setMarkingRubrics(event.target.value);
     };
+
+    useEffect(() => {
+        fetch(`http://127.0.0.1:5000/teacher/${teacherUsername}`)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to fetch classes');
+                }
+            })
+            .then(data => setClasses(data))
+            .catch(error => console.error('Error:', error));
+    }, [teacherUsername]);
+
+    // useEffect(() => {
+    //     if (newClass) {
+    //         fetch(`http://127.0.0.1:5000/students/${newClass}`)
+    //             .then(response => response.json())
+    //             .then(data => setStudents(data))
+    //             .catch(error => console.error('Error:', error));
+    //     }
+    // }, [newClass]);
+
+
 
     // Handlers for "Mark Existing Homework"
     const handleClassChange = (event) => {
@@ -88,6 +164,14 @@ function MarkHomeworkPage() {
         // Implement your update logic here
         // Add your own API call or backend interaction here
         console.log("Rubrics Updated");
+
+        setValue('1')
+
+        setNewClass(selectedClass)
+        setHomeworkTitle(selectedHomework)
+        setMarkingRubrics(existingMarkingRubrics)
+
+        createHomework()
     };
 
     const deleteHomework = async () => {
@@ -96,60 +180,122 @@ function MarkHomeworkPage() {
         console.log("Homework Deleted");
     };
 
+    useEffect(() => {
+        if (newClass) {
+            fetch(`http://127.0.0.1:5000/students/${newClass}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Log to confirm the structure of data
+                    setStudents(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    }, [newClass]); // Re-run the effect when newClass changes
+
     const createHomework = () => {
         // Logic to create the Homework
         // For example, making an API call to create the Homework and then fetch the list of students
         setIsHomeworkCreated(true);
+        if (newClass) {
+            fetch(`http://127.0.0.1:5000/students/${newClass}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Log to confirm the structure of data
+                    setStudents(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
         console.log("Homework Created");
 
         // Mock data for students
-        const mockStudents = [
+        //const mockStudents = [
             //{ id: 1, name: 'Student 1', number: '1001' },
             //{ id: 2, name: 'Student 2', number: '1002' },
-            { id: 1, name: 'Student 1', number: '1001', grade: 'A', comments: 'Excellent!' },
-            { id: 2, name: 'Student 2', number: '1002', grade: 'B', comments: 'Good effort, but needs improvement on structure.' },
+            // {id: 1, name: 'Student 1', number: '1001', grade: 'A', comments: 'Excellent!'},
+            // {
+            //     id: 2,
+            //     name: 'Student 2',
+            //     number: '1002',
+            //     grade: 'B',
+            //     comments: 'Good effort, but needs improvement on structure.'
+            // },
             // ... more students
-        ];
+        //];
 
-        setStudents(mockStudents);
+        // setStudents(mockStudents);
     };
+
 
 
     const handleFileUpload = (studentId, file) => {
         // Logic to handle file upload
         // For example, you might want to make an API call to upload the file
+        //setUploads({...uploads, [studentId]: file});
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('student_id', studentId);
 
-        setUploads({ ...uploads, [studentId]: file });
+        fetch('http://127.0.0.1:5000/submittedWork', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('OCR Text:', data.text);
+                // Handle the extracted text as needed
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
     };
 
     const handleBack = () => {
         setIsHomeworkCreated(false);
     };
-
-    const [students, setStudents] = useState([
-        // Dummy initial student data
-        { id: 1, name: 'Student 1', number: '1001', grade: 'A', comments: 'Excellent work!' },
-        { id: 2, name: 'Student 2', number: '1002', grade: 'B', comments: 'Good effort, but needs improvement on structure.' },
-        // ... other students
-    ]);
+    const [students, setStudents] = useState([]);
+    // const [students, setStudents] = useState([
+    //     // Dummy initial student data
+    //     {id: 1, name: 'Student 1', number: '1001', grade: 'A', comments: 'Excellent work!'},
+    //     {
+    //         id: 2,
+    //         name: 'Student 2',
+    //         number: '1002',
+    //         grade: 'B',
+    //         comments: 'Good effort, but needs improvement on structure.'
+    //     },
+    //     // ... other students
+    // ]);
 
     // Function to handle the "Start Marking" button click
     const startMarking = () => {
         // Here you would normally fetch the grades and comments from an API
         // For now, we're using the dummy data already set in the state
 
+
+        sendAssignment({ homeworkTitle: homeworkTitle, rubrics: markingRubrics })
+            .then(() => {
+                navigate('/gradesdisplay', {
+                    state: {
+                        students: students, // The students data
+                        classInfo: newClass, // The selected class
+                        homeworkTitle: homeworkTitle // The homework title
+                    }
+                })
+            })
+            .catch(error => console.error('Error:', error));
         // Navigate to the Grades Display Page
-        navigate('/gradesdisplay', { state: { students } });
     };
 
 
     return (
-        <Box sx={{ width: '100%', typography: 'body1' }}>
+        <Box sx={{width: '100%', typography: 'body1'}}>
             <TabContext value={value}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
                     <Tabs value={value} onChange={handleChange} aria-label="homework tabs">
-                        <Tab label="Create New Homework" value="1" />
-                        <Tab label="Mark Existing Homework" value="2" />
+                        <Tab label="Create New Homework" value="1"/>
+                        <Tab label="Mark Existing Homework" value="2"/>
                     </Tabs>
                 </Box>
                 <TabPanel value="1">
@@ -201,7 +347,7 @@ function MarkHomeworkPage() {
                                     inputComponent: TextareaAutosize,
                                     inputProps: {
                                         minRows: 3,
-                                        style: { resize: 'vertical' },
+                                        style: {resize: 'vertical'},
                                     },
                                 }}
                                 sx={{
@@ -215,14 +361,17 @@ function MarkHomeworkPage() {
 
                             <List>
                                 {students.map((student) => (
-                                    <ListItem key={student.id}>
+                                    <ListItem key={student._id}>
                                         <ListItemText primary={`${student.name} (${student.number})`} />
-                                        <Input type="file" onChange={(e) => handleFileUpload(student.id, e.target.files[0])} />
+                                        <Input type="file" onChange={(e) => handleFileUpload(student._id, e.target.files[0])} />
                                     </ListItem>
                                 ))}
                             </List>
-                            <Button variant="contained" sx={{ mt: 2}} onClick={startMarking}>Start Marking</Button>
-                            <Button variant="outlined" sx={{ mt: 2, ml: 2 }} onClick={handleBack}>Back</Button>
+
+
+
+                            <Button variant="contained" sx={{mt: 2}} onClick={startMarking}>Start Marking</Button>
+                            <Button variant="outlined" sx={{mt: 2, ml: 2}} onClick={handleBack}>Back</Button>
                         </Box>
                     ) : (
                         <Box>
@@ -235,8 +384,11 @@ function MarkHomeworkPage() {
                                 fullWidth
                                 margin="normal"
                             >
-                                <MenuItem value="10">Class 10</MenuItem>
-                                <MenuItem value="20">Class 20</MenuItem>
+                                {classes.map((className) => (
+                                    <MenuItem key={className} value={className}>
+                                        {className}
+                                    </MenuItem>
+                                ))}
                             </TextField>
                             <TextField
                                 label="Homework Title"
@@ -257,11 +409,11 @@ function MarkHomeworkPage() {
                                     inputComponent: TextareaAutosize,
                                     inputProps: {
                                         minRows: 3,
-                                        style: { resize: 'vertical' },
+                                        style: {resize: 'vertical'},
                                     },
                                 }}
                             />
-                            <Button variant="contained" sx={{ mt: 2 }} onClick={createHomework}>Create Homework</Button>
+                            <Button variant="contained" sx={{mt: 2}} onClick={createHomework}>Create Homework</Button>
                         </Box>
                     )}
 
@@ -278,8 +430,11 @@ function MarkHomeworkPage() {
                         fullWidth
                         margin="normal"
                     >
-                        <MenuItem value="10">Class 10</MenuItem>
-                        <MenuItem value="20">Class 20</MenuItem>
+                        {classes.map((className) => (
+                            <MenuItem key={className} value={className}>
+                                {className}
+                            </MenuItem>
+                        ))}
                     </TextField>
                     <TextField
                         select
@@ -310,13 +465,14 @@ function MarkHomeworkPage() {
                                     inputComponent: TextareaAutosize,
                                     inputProps: {
                                         minRows: 3,
-                                        style: { resize: 'vertical' },
+                                        style: {resize: 'vertical'},
                                     },
                                 }}
                             />
 
-                            <Button variant="contained" sx={{ mt: 2 }}  onClick={updateRubrics}>Update Rubrics</Button>
-                            <Button variant="outlined" sx={{ mt: 2, ml: 2 }} color="error" onClick={deleteHomework}>Delete Homework</Button>
+                            <Button variant="contained" sx={{mt: 2}} onClick={updateRubrics}>Update Rubrics</Button>
+                            <Button variant="outlined" sx={{mt: 2, ml: 2}} color="error" onClick={deleteHomework}>Delete
+                                Homework</Button>
                         </>
                     )}
                 </TabPanel>
