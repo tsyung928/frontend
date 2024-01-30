@@ -64,6 +64,7 @@ function MarkHomeworkPage() {
     const [classes, setClasses] = useState([]);
     const [homeworkTitle, setHomeworkTitle] = useState('');
     const [markingRubrics, setMarkingRubrics] = useState('');
+    const [assignmentId, setAssignmentId] = useState(null);
 
     // State for "Mark Existing Homework" form
     const [selectedClass, setSelectedClass] = useState('');
@@ -123,35 +124,53 @@ function MarkHomeworkPage() {
             .catch(error => console.error('Error:', error));
     }, [teacherUsername]);
 
-    // useEffect(() => {
-    //     if (newClass) {
-    //         fetch(`http://127.0.0.1:5000/students/${newClass}`)
-    //             .then(response => response.json())
-    //             .then(data => setStudents(data))
-    //             .catch(error => console.error('Error:', error));
-    //     }
-    // }, [newClass]);
-
 
 
     // Handlers for "Mark Existing Homework"
+    // const handleClassChange = (event) => {
+    //     const newClass = event.target.value;
+    //     setSelectedClass(newClass);
+    //     setSelectedHomework('');
+    //     setExistingMarkingRubrics('');
+    //     // Load homework options based on selected class
+    //     // TODO: Fetch homework titles from an API or service
+    //     const newHomeworkOptions = newClass === '10' ? ['Essay', 'Project'] : ['Homework 1', 'Homework 2'];
+    //     setHomeworkOptions(newHomeworkOptions);
+    // };
     const handleClassChange = (event) => {
         const newClass = event.target.value;
+        console.log(newClass)
         setSelectedClass(newClass);
         setSelectedHomework('');
         setExistingMarkingRubrics('');
-        // Load homework options based on selected class
-        // TODO: Fetch homework titles from an API or service
-        const newHomeworkOptions = newClass === '10' ? ['Essay', 'Project'] : ['Homework 1', 'Homework 2'];
-        setHomeworkOptions(newHomeworkOptions);
+
+        // Fetch homework titles based on selected class
+        fetch(`http://127.0.0.1:5000/assignment/${newClass}`)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to fetch homework title');
+                }
+            })
+            .then(data => setHomeworkOptions(data))
+            .catch(error => console.error('Error:', error));
+
     };
 
     const handleExistingHomeworkChange = (event) => {
-        const newHomework = event.target.value;
-        setSelectedHomework(newHomework);
-        // TODO: Fetch marking rubrics from an API or service
-        const newMarkingRubrics = newHomework === 'Essay' ? 'Criteria for essay grading' : 'Criteria for project grading';
-        setExistingMarkingRubrics(newMarkingRubrics);
+        const newHomeworkTitle = event.target.value;
+        setSelectedHomework(newHomeworkTitle);
+
+        // Assuming that homework title is unique and can be used to fetch rubrics
+        // Fetch marking rubrics based on selected homework
+        fetch(`http://127.0.0.1:5000/assignment/homework-title/${newHomeworkTitle}`)
+            .then(response => response.json())
+            .then(data => {
+                const markingRubrics = data.rubrics; // Assuming 'rubrics' is the field in your response
+                setExistingMarkingRubrics(markingRubrics);
+            })
+            .catch(error => console.error('Error fetching marking rubrics:', error));
     };
 
     // Handler for updating existing marking rubrics after they have been loaded
@@ -160,18 +179,57 @@ function MarkHomeworkPage() {
     };
 
 
+    // const updateRubrics = async () => {
+    //     // Implement your update logic here
+    //     // Add your own API call or backend interaction here
+    //     console.log("Rubrics Updated");
+    //
+    //     setValue('1')
+    //
+    //     setNewClass(selectedClass)
+    //     setHomeworkTitle(selectedHomework)
+    //     setMarkingRubrics(existingMarkingRubrics)
+    //
+    //     createHomework()
+    //};
     const updateRubrics = async () => {
-        // Implement your update logic here
-        // Add your own API call or backend interaction here
-        console.log("Rubrics Updated");
+        // Construct the payload for the update
+        const payload = {
+            class: selectedClass,
+            homeworkTitle: selectedHomework,
+            rubrics: existingMarkingRubrics
+        };
 
-        setValue('1')
+        // Make the API call to the backend to update the rubrics
+        try {
+            const response = await fetch('http://127.0.0.1:5000/assignment/update-rubrics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
 
-        setNewClass(selectedClass)
-        setHomeworkTitle(selectedHomework)
-        setMarkingRubrics(existingMarkingRubrics)
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
 
-        createHomework()
+            const data = await response.json();
+            console.log("Rubrics Updated:", data.message);
+
+            // Reset states or perform additional actions as needed
+            setValue('1');
+            setNewClass(selectedClass);
+            setHomeworkTitle(selectedHomework);
+            setMarkingRubrics(existingMarkingRubrics);
+
+
+            // You may want to call createHomework() here if needed
+            createHomework()
+
+        } catch (error) {
+            console.error('Error updating rubrics:', error);
+        }
     };
 
     const deleteHomework = async () => {
@@ -206,35 +264,50 @@ function MarkHomeworkPage() {
                 .catch(error => console.error('Error:', error));
         }
 
+        const homeworkData = {
+            class: newClass,
+            title: homeworkTitle, // Replace with actual state variable if different
+            rubrics: markingRubrics // Replace with actual state variable if different
+        };
+
+        // Send the data to the backend
+        fetch('http://127.0.0.1:5000/create_homework', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(homeworkData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if(data.id) {
+                    setAssignmentId(data.id);  // Store the assignment ID in state
+                    console.log("Homework Created with ID:", data.id);
+                } else {
+                    // Handle any issues, such as not receiving an ID
+                    console.error("Failed to create homework or receive an ID.");
+                }
+                setIsHomeworkCreated(true);
+            })
+            .catch(error => {
+                console.error('Error:', error); // Handle error
+            });
+
         console.log("Homework Created");
-
-        // Mock data for students
-        //const mockStudents = [
-            //{ id: 1, name: 'Student 1', number: '1001' },
-            //{ id: 2, name: 'Student 2', number: '1002' },
-            // {id: 1, name: 'Student 1', number: '1001', grade: 'A', comments: 'Excellent!'},
-            // {
-            //     id: 2,
-            //     name: 'Student 2',
-            //     number: '1002',
-            //     grade: 'B',
-            //     comments: 'Good effort, but needs improvement on structure.'
-            // },
-            // ... more students
-        //];
-
-        // setStudents(mockStudents);
     };
 
 
 
-    const handleFileUpload = (studentId, file) => {
+    const handleFileUpload = (studentId, assignmentId, file) => {
         // Logic to handle file upload
         // For example, you might want to make an API call to upload the file
         //setUploads({...uploads, [studentId]: file});
         const formData = new FormData();
         formData.append('file', file);
         formData.append('student_id', studentId);
+        formData.append('assignment_id', assignmentId);
+
+        console.log(`assignment_id ${assignmentId} student_id ${studentId}`)
 
         fetch('http://127.0.0.1:5000/submittedWork', {
             method: 'POST',
@@ -255,18 +328,6 @@ function MarkHomeworkPage() {
         setIsHomeworkCreated(false);
     };
     const [students, setStudents] = useState([]);
-    // const [students, setStudents] = useState([
-    //     // Dummy initial student data
-    //     {id: 1, name: 'Student 1', number: '1001', grade: 'A', comments: 'Excellent work!'},
-    //     {
-    //         id: 2,
-    //         name: 'Student 2',
-    //         number: '1002',
-    //         grade: 'B',
-    //         comments: 'Good effort, but needs improvement on structure.'
-    //     },
-    //     // ... other students
-    // ]);
 
     // Function to handle the "Start Marking" button click
     const startMarking = () => {
@@ -363,7 +424,7 @@ function MarkHomeworkPage() {
                                 {students.map((student) => (
                                     <ListItem key={student._id}>
                                         <ListItemText primary={`${student.name} (${student.number})`} />
-                                        <Input type="file" onChange={(e) => handleFileUpload(student._id, e.target.files[0])} />
+                                        <Input type="file" onChange={(e) => handleFileUpload(student._id, assignmentId, e.target.files[0])} />
                                     </ListItem>
                                 ))}
                             </List>
