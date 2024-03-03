@@ -42,7 +42,7 @@ function sendAssignment(data) {
 }
 
 function MarkassignmentPage() {
-    const teacherUsername = "AppleMa";
+    const teacherUsername = localStorage.getItem("teacherUsername") || "DefaultUsername";
     // State for tabs
     const location = useLocation();
 

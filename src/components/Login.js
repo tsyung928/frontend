@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { TextField, Button, Box } from "@mui/material";
+import { TextField, Button, Box, Container, Typography } from "@mui/material";
 import { ResponsiveContainer } from "recharts";
+import { Event } from "@mui/icons-material";
 
 // const LoginPage = ({ onLoginSuccess }) => {
 //     const [username, setUsername] = useState("");
@@ -51,7 +52,7 @@ import { ResponsiveContainer } from "recharts";
 
 // export default LoginPage;
 
-const Login = (props) => {
+const Login = ({ setLoggedIn }) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [usernameError, setUsernameError] = useState("");
@@ -59,91 +60,102 @@ const Login = (props) => {
 
     const navigate = useNavigate();
 
-    const onButtonClick = () => {
-        // You'll update this function later...
-        const onButtonClick = () => {
-            // Set initial error values to empty
-            setUsernameError("");
-            setPasswordError("");
+    const onButtonClick = (e) => {
+        console.log("Login button clicked");
+        e.preventDefault();
+        setUsernameError("");
+        setPasswordError("");
 
-            // Check if the user has entered both fields correctly
-            if ("" === username) {
-                setUsernameError("Please enter your username");
-                return;
-            }
+        if ("" === username) {
+            setUsernameError("Please enter your username");
+            return;
+        }
 
-            if ("" === password) {
-                setPasswordError("Please enter a password");
-                return;
-            }
+        if ("" === password) {
+            setPasswordError("Please enter a password");
+            return;
+        }
 
-            // Authentication calls will be made here...
-        };
+        // Send POST request to Flask backend
+        fetch("http://127.0.0.1:5000/login", {
+            // Ensure the URL matches your Flask app's
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("Success:", data);
+                if (data.status === "success") {
+                    setLoggedIn(true);
+                    localStorage.setItem("teacherUsername", username);
+                    navigate("/MarkHomework"); // Navigate to MarkHomework on success
+                } else {
+                    // Handle login failure
+                    setPasswordError("Invalid username or password");
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+            });
     };
 
     return (
-        <Box
+        <Container
+            component="main"
+            maxWidth="sm"
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                width: "100%",
-                height: "700px",
-                justifyContent: "center",
                 alignItems: "center",
+                height: "100vh",
+                justifyContent: "center",
             }}
         >
-            <div className="titleContainer">
+            <div className="titleContainer" align="center">
                 <div>Automated Homework Marking Web Application</div>
                 <br />
             </div>
             <div className="title2Container">
-                <div>Sign In</div>
+                <div>Please Sign In</div>
             </div>
-
-            <br />
-            <div>
-                {/* <div> */}
-                {/* <input
-                    value={username}
-                    placeholder="Enter your username here"
-                    onChange={(ev) => setUsername(ev.target.value)}
-                    className={"inputBox"}
-                /> */}
+            <Box component="form" noValidate sx={{ mt: 1, width: "100%" }}>
                 <TextField
-                    label="Username"
-                    variant="outlined"
-                    fullWidth
                     margin="normal"
+                    required
+                    fullWidth
+                    id="username"
+                    label="Username"
+                    name="username"
+                    autoComplete="username"
+                    autoFocus
+                    error={Boolean(usernameError)}
+                    helperText={usernameError}
                     onChange={(ev) => setUsername(ev.target.value)}
                 />
-                <label className="errorLabel">{usernameError}</label>
-            </div>
-            <br />
-            {/* <div className={"inputContainer"}> */}
-            <div>
-                {/* <input
-                    value={password}
-                    placeholder="Enter your password here"
-                    onChange={(ev) => setPassword(ev.target.value)}
-                    className={"inputBox"}
-                /> */}
                 <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="password"
                     label="Password"
                     type="password"
-                    variant="outlined"
-                    fullWidth
+                    id="password"
+                    autoComplete="current-password"
+                    error={Boolean(passwordError)}
+                    helperText={passwordError}
                     onChange={(ev) => setPassword(ev.target.value)}
                 />
-                <label className="errorLabel">{passwordError}</label>
-            </div>
-            <br />
-            <div>
-                <Button variant="contained" color="primary" onClick={onButtonClick}>
+                <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} onClick={onButtonClick}>
                     Login
                 </Button>
-                {/* <input className={"inputButton"} type="button" onClick={onButtonClick} value={"Log in"} /> */}
-            </div>
-        </Box>
+            </Box>
+        </Container>
     );
 };
 

@@ -3,7 +3,7 @@ import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { AppBar, Toolbar, IconButton, Typography, Menu, MenuItem, Button, Box, useMediaQuery } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
-const Navbar = () => {
+const Navbar = ({ logout }) => {
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width:600px)");
@@ -29,6 +29,14 @@ const Navbar = () => {
         }
     };
 
+    const handleLogout = () => {
+        // Placeholder for actual logout logic
+        // e.g., setLoggedIn(false) if you're passing a logout function down as a prop
+        logout();
+
+        navigate("/"); // Redirect to the login page or home page after logging out
+    };
+
     const mobileMenuId = "primary-search-account-menu-mobile";
 
     const renderMobileMenu = (
@@ -50,9 +58,14 @@ const Navbar = () => {
             {["Mark Homework", "Class Performance", "Profile", "Logout"].map((item) => (
                 <MenuItem
                     key={item}
-                    onClick={handleMobileMenuClose}
-                    component={RouterLink}
-                    to={`/${item.toLowerCase().replace(/ /g, "")}`}
+                    onClick={() => {
+                        handleMobileMenuClose();
+                        if (item === "Logout") {
+                            handleLogout();
+                        } else {
+                            navigate(`/${item.toLowerCase().replace(/ /g, "")}`);
+                        }
+                    }}
                 >
                     <Typography textAlign="center">{item}</Typography>
                 </MenuItem>
@@ -98,8 +111,13 @@ const Navbar = () => {
                             <Button
                                 key={page}
                                 sx={{ my: 2, color: "white", display: "block" }}
-                                component={RouterLink}
-                                to={`/${page.toLowerCase()}`}
+                                onClick={() => {
+                                    if (page === "Logout") {
+                                        handleLogout();
+                                    }
+                                }}
+                                component={page !== "Logout" ? RouterLink : null}
+                                to={page !== "Logout" ? `/${page.toLowerCase()}` : null}
                             >
                                 {page}
                             </Button>
