@@ -26,7 +26,6 @@ const TeacherForm = ({ onSubmit }) => {
                 id="username"
                 label="Teacher's Name"
                 name="username"
-                autoComplete="username"
                 autoFocus
                 margin="normal"
                 value={teacherData.username}

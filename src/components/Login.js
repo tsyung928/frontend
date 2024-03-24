@@ -92,9 +92,14 @@ const Login = ({ setLoggedIn }) => {
             .then((data) => {
                 console.log("Success:", data);
                 if (data.status === "success") {
+                    localStorage.setItem("role", data.role);
+                    if (data.role === "admin") {
+                        navigate("/Admin"); // Navigate to Admin on success
+                    } else {
+                        localStorage.setItem("teacherUsername", username);
+                        navigate("/MarkHomework"); // Navigate to MarkHomework on success
+                    }
                     setLoggedIn(true);
-                    localStorage.setItem("teacherUsername", username);
-                    navigate("/MarkHomework"); // Navigate to MarkHomework on success
                 } else {
                     // Handle login failure
                     setPasswordError("Invalid username or password");

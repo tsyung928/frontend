@@ -10,15 +10,22 @@ import Login from "./components/Login";
 import Admin from "./components/Admin";
 
 function App() {
-    const [loggedIn, setLoggedIn] = useState(false);
-    const [username, setUsername] = useState("");
+    const [loggedIn, setLoggedIn] = useState(localStorage.getItem("loggedIn") === "true");
+    const [username, setUsername] = useState(localStorage.getItem("username") || "");
+
+    useEffect(() => {
+        // Sync loggedIn state to local storage whenever it changes
+        localStorage.setItem("loggedIn", loggedIn);
+        localStorage.setItem("username", username);
+    }, [loggedIn, username]);
 
     const logout = () => {
         setLoggedIn(false);
         setUsername("");
-        // Clear any stored data if necessary
+        localStorage.removeItem("loggedIn");
+        localStorage.removeItem("username");
+        // Redirect to login page after logout if needed
     };
-
     return (
         <BrowserRouter>
             {loggedIn && <Header logout={logout} />} {/* Only show Header if loggedIn is true */}

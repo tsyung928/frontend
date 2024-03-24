@@ -7,7 +7,7 @@ const Navbar = ({ logout }) => {
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width:600px)");
-
+    const role = localStorage.getItem("role");
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
     const handleMobileMenuClose = () => {

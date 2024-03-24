@@ -13,6 +13,7 @@ import {
     ListItemText,
     Input,
     Autocomplete,
+    LinearProgress,
 } from "@mui/material";
 
 import { styled } from "@mui/material/styles";
@@ -20,6 +21,7 @@ import { TextareaAutosize } from "@mui/base/TextareaAutosize";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useNavigate } from "react-router-dom";
 import { ResponsiveContainer } from "recharts";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 function sendAssignment(data) {
     return new Promise((resolve, reject) => {
@@ -58,7 +60,8 @@ function MarkassignmentPage() {
     // States for creating assignment
     const [isassignmentCreated, setIsassignmentCreated] = useState(false);
 
-    //States for navigation
+    const [uploadStatuses, setUploadStatuses] = useState({});
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -95,12 +98,23 @@ function MarkassignmentPage() {
         formData.append("assignment_id", assignmentId);
 
         console.log(`assignment_id ${assignmentId} student_id ${studentId}`);
+        setUploadStatuses((prevStatuses) => ({ ...prevStatuses, [studentId]: "inProgress" }));
 
         fetch("http://127.0.0.1:5000/submittedWork", {
             method: "POST",
             body: formData,
         })
             .then((response) => response.json())
+            .then((response) => {
+                // If the response indicates success, update the status to 'success'
+                const isSuccess = response && response.status === "success"; // Adjust according to your response structure
+                setUploadStatuses((prevStatuses) => ({
+                    ...prevStatuses,
+                    [studentId]: isSuccess ? "success" : "failure", // Set to 'failure' if response does not indicate success
+                }));
+                console.log(response);
+                console.log("OCR Text:", response.text);
+            })
             .then((data) => {
                 console.log("OCR Text:", data.text);
                 // Handle the extracted text as needed
@@ -108,6 +122,11 @@ function MarkassignmentPage() {
             .catch((error) => {
                 console.error("Error:", error);
             });
+    };
+    const allUploadsSuccessful = () => {
+        console.log("Checking if all uploads are successful");
+        console.log(uploadStatuses);
+        return students.every((student) => uploadStatuses[student._id] === "success");
     };
 
     const handleBeforeUnload = (event) => {
@@ -168,9 +187,21 @@ function MarkassignmentPage() {
 
         setassignmentTitle(t);
         setMarkingRubrics("");
+        setAssignmentDescription("");
 
         try {
-            const data = await fetch(`http://127.0.0.1:5000/assignment/assignment-title/${t}`).then((d) => {
+            const data = await fetch(`http://127.0.0.1:5000/assignment/fetch_description_by_title/${t}`).then((d) => {
+                return d.json();
+            });
+            if (data && data.description) {
+                setAssignmentDescription(data.description);
+            } else {
+                setassignmentTitle(t);
+            }
+        } catch (e) {}
+
+        try {
+            const data = await fetch(`http://127.0.0.1:5000/assignment/fetch_rubrics_by_title/${t}`).then((d) => {
                 return d.json();
             });
             if (data && data.rubrics) {
@@ -200,11 +231,10 @@ function MarkassignmentPage() {
             class: selectedClass,
             title: assignmentTitle,
             description: assignmentDescription,
-            rubrics: markingRubrics, // Replace with actual state variable if different
+            rubrics: markingRubrics,
         };
 
         if (titles.includes(assignmentTitle)) {
-            // Update the existing assignment rubrics
             const updateResponse = await fetch("http://127.0.0.1:5000/update_assignment", {
                 method: "POST",
                 headers: {
@@ -215,9 +245,8 @@ function MarkassignmentPage() {
 
             if (updateResponse.success) {
                 setAssignmentId(updateResponse.id);
-                console.log("assignment updated successfully.");
             } else {
-                console.error("Failed to update assignment.");
+                setAssignmentId(updateResponse.id);
             }
         } else {
             const data = await fetch("http://127.0.0.1:5000/create_assignment", {
@@ -230,7 +259,9 @@ function MarkassignmentPage() {
 
             if (data.id) {
                 setAssignmentId(data.id);
+                console.log(data.id);
             }
+            console.log("assignment created successfully.");
         }
         setIsassignmentCreated(true);
     };
@@ -238,12 +269,12 @@ function MarkassignmentPage() {
     const startMarking = async () => {
         // Construct the payload
         const payload = {
+            assignmentId: assignmentId,
             class: selectedClass,
-            title: assignmentTitle,
-            rubrics: markingRubrics,
         };
+        console.log("start");
         try {
-            const response = await fetch("http://127.0.0.1:5000/start_marking", {
+            const response = await fetch("http://127.0.0.1:5000/start-marking", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -256,15 +287,12 @@ function MarkassignmentPage() {
             }
 
             const result = await response.json();
-            // Process and display the comments and grades returned from the API
-            // This may involve updating state or navigating to a results page
             console.log(result);
-
-            // You might want to update the state with the received results here
-            // setGradesAndComments(result);
         } catch (error) {
             console.error("Failed to start marking:", error);
         }
+
+        navigate("/GradesDisplay", { state: { assignmentId: assignmentId } });
     };
     useEffect(() => {
         window.addEventListener("beforeunload", handleBeforeUnload);
@@ -272,7 +300,7 @@ function MarkassignmentPage() {
         return () => {
             window.removeEventListener("beforeunload", handleBeforeUnload);
         };
-    }, [selectedClass, assignmentTitle]); // Add dependencies if needed
+    }, [selectedClass, assignmentTitle]);
 
     const VisuallyHiddenInput = styled("input")({
         clip: "rect(0 0 0 0)",
@@ -285,6 +313,45 @@ function MarkassignmentPage() {
         whiteSpace: "nowrap",
         width: 1,
     });
+
+    const renderUploadProgress = (status) => {
+        let progressComponent;
+        switch (status) {
+            case "inProgress":
+                progressComponent = <LinearProgress />;
+                break;
+            case "success":
+                progressComponent = <LinearProgress variant="determinate" value={100} color="success" />;
+                break;
+            case "failure":
+                progressComponent = <LinearProgress variant="determinate" value={100} color="error" />;
+                break;
+            default:
+                // A transparent LinearProgress to keep the layout consistent
+                progressComponent = <LinearProgress variant="determinate" value={0} style={{ visibility: "hidden" }} />;
+        }
+        return <Box sx={{ width: "100%" }}>{progressComponent}</Box>;
+    };
+    const FileInput = ({ student, onFileSelect }) => (
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+            <input
+                accept=".pdf" // Specify file types if needed
+                style={{ display: "none" }} // Hide the default input
+                id={`raised-button-file-${student._id}`}
+                multiple
+                type="file"
+                onChange={onFileSelect}
+            />
+            <label htmlFor={`raised-button-file-${student._id}`}>
+                <Button variant="outlined" component="span" startIcon={<CloudUploadIcon />} sx={{ marginRight: 2 }}>
+                    Choose File
+                </Button>
+            </label>
+            <Typography variant="body2" noWrap>
+                {student.file && student.file.name}
+            </Typography>
+        </Box>
+    );
 
     return (
         <div>
@@ -382,7 +449,7 @@ function MarkassignmentPage() {
                                     my: 5,
                                 }}
                             >
-                                <List>
+                                <List sx={{ width: "100%" }}>
                                     {students.map((student, index) => (
                                         <ListItem
                                             key={student._id}
@@ -391,38 +458,40 @@ function MarkassignmentPage() {
                                                 "&:hover": {
                                                     backgroundColor: "action.selected",
                                                 },
+                                                display: "block",
+                                                mb: 1,
                                             }}
                                         >
-                                            <ListItemText primary={`${student.name} (${student.number})`} />
-                                            <Input
-                                                type="file"
-                                                edge="end"
-                                                onChange={(e) =>
-                                                    handleFileUpload(student._id, assignmentId, e.target.files[0])
-                                                }
-                                            />
-                                            {/* <Button
-                                            component="label"
-                                            variant="contained"
-                                            onChange={(e) =>
-                                                handleFileUpload(student._id, assignmentId, e.target.files[0])
-                                            }
-                                            startIcon={<CloudUploadIcon />}
-                                        >
-                                            Upload file
-                                            <VisuallyHiddenInput type="file" />
-                                        </Button> */}
+                                            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                                <ListItemText
+                                                    primary={`${student.name} (${student.number})`}
+                                                    sx={{ my: 0 }}
+                                                />
+                                                <Input
+                                                    type="file"
+                                                    edge="end"
+                                                    onChange={(e) =>
+                                                        handleFileUpload(student._id, assignmentId, e.target.files[0])
+                                                    }
+                                                    disabled={uploadStatuses[student._id] === "inProgress"}
+                                                    sx={{ display: "block", mb: 1 }}
+                                                />
+                                            </div>
+
+                                            {renderUploadProgress(uploadStatuses[student._id])}
                                         </ListItem>
                                     ))}
                                 </List>
                             </Box>
 
                             <Box sx={{ display: "flex" }}>
-                                <Button variant="contained" sx={{ mt: 2 }} onClick={startMarking}>
+                                <Button
+                                    variant="contained"
+                                    sx={{ mt: 2 }}
+                                    onClick={startMarking}
+                                    disabled={!allUploadsSuccessful()}
+                                >
                                     Start Marking
-                                </Button>
-                                <Button variant="outlined" sx={{ mt: 2, ml: 2 }} onClick={handleBack}>
-                                    Back
                                 </Button>
                             </Box>
                         </>
