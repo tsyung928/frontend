@@ -16,14 +16,11 @@ function App() {
     useEffect(() => {
         // Sync loggedIn state to local storage whenever it changes
         localStorage.setItem("loggedIn", loggedIn);
-        localStorage.setItem("username", username);
     }, [loggedIn, username]);
 
     const logout = () => {
         setLoggedIn(false);
         setUsername("");
-        localStorage.removeItem("loggedIn");
-        localStorage.removeItem("username");
         // Redirect to login page after logout if needed
     };
     return (
@@ -38,7 +35,7 @@ function App() {
 
                 <Route path="/MarkHomework" element={<MarkHomework />}></Route>
                 <Route path="/ClassPerformance" element={<ClassPerformance />}></Route>
-                <Route path="/Profile" element={<Profile />}></Route>
+                <Route path="/Profile" element={<Profile />} />
                 <Route path="/GradesDisplay" element={<GradesDisplay />}></Route>
                 <Route path="/Admin" element={<Admin />}></Route>
             </Routes>

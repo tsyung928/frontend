@@ -12,6 +12,7 @@ import {
     Stack,
     Backdrop,
     CircularProgress,
+    MenuItem,
 } from "@mui/material";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -31,12 +32,31 @@ function GradesDisplay() {
     const [editGrade, setEditGrade] = useState(null);
     const navigate = useNavigate();
     const [errors, setErrors] = useState({ score: "", explanation: "" });
-    const [viewHomeworkOpen, setViewHomeworkOpen] = useState(false);
+    const [viewHomeworkOpenIndex, setViewHomeworkOpenIndex] = useState(-1);
     const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
     const [selectedName, setSelectedName] = useState("");
     const [selectedNumber, setSelectedNumber] = useState("");
     const [isLoading, setIsLoading] = useState(true);
+    const [sortCriteria, setSortCriteria] = useState("number"); // This can be 'number', 'score', or 'name'
 
+    function sortGrades(criteria) {
+        let sortedGrades;
+        switch (criteria) {
+            case "score":
+                sortedGrades = [...grades].sort((a, b) => b.score - a.score);
+                break;
+            case "name":
+                sortedGrades = [...grades].sort((a, b) => a.studentName.localeCompare(b.studentName));
+                break;
+            case "number":
+            default:
+                sortedGrades = [...grades].sort(
+                    (a, b) => parseInt(a.studentNumber, 10) - parseInt(b.studentNumber, 10)
+                );
+                break;
+        }
+        setGrades(sortedGrades);
+    }
     useEffect(() => {
         const fetchAssignmentDetails = async () => {
             setIsLoading(true);
@@ -74,6 +94,13 @@ function GradesDisplay() {
 
         fetchAssignmentDetails();
     }, [assignmentId]);
+
+    useEffect(() => {
+        if (assignmentId) {
+            // ... fetch and sort logic
+            sortGrades(sortCriteria); // Now it's okay to call sortGrades here
+        }
+    }, [assignmentId, sortCriteria]);
 
     const [originalEditGrade, setOriginalEditGrade] = useState(null);
 
@@ -148,15 +175,15 @@ function GradesDisplay() {
         navigate("/MarkHomework");
     };
 
-    const handleOpenHomework = (submissionId) => {
+    const handleOpenHomework = (index, submissionId) => {
         setSelectedSubmissionId(submissionId);
         setSelectedName(grades.find((grade) => grade.submissionId === submissionId).studentName);
         setSelectedNumber(grades.find((grade) => grade.submissionId === submissionId).studentNumber);
-        setViewHomeworkOpen(true);
+        setViewHomeworkOpenIndex(index);
     };
 
     const handleCloseHomework = () => {
-        setViewHomeworkOpen(false);
+        setViewHomeworkOpenIndex(-1);
     };
     if (isLoading) {
         return (
@@ -189,6 +216,18 @@ function GradesDisplay() {
                         Homework Title: {title}
                     </Typography>
                 </div>
+                <TextField
+                    select
+                    label="Sort by"
+                    value={sortCriteria}
+                    onChange={(e) => setSortCriteria(e.target.value)}
+                    variant="outlined"
+                    sx={{ mb: 2, mx: 2 }}
+                >
+                    <MenuItem value="number">Class Number</MenuItem>
+                    <MenuItem value="name">Name</MenuItem>
+                    <MenuItem value="score">Score</MenuItem>
+                </TextField>
                 <Paper elevation={3} sx={{ maxWidth: 1000, margin: "auto" }}>
                     <List>
                         {grades.map((grade, index) => (
@@ -222,12 +261,12 @@ function GradesDisplay() {
                                     <Stack direction="column" spacing={1} sx={{ p: 1 }}>
                                         <Button
                                             variant="outlined"
-                                            onClick={() => handleOpenHomework(grade.submissionId)}
+                                            onClick={() => handleOpenHomework(index, grade.submissionId)}
                                         >
                                             Homework
                                         </Button>
                                         <ViewHomework
-                                            open={viewHomeworkOpen}
+                                            open={viewHomeworkOpenIndex === index}
                                             onClose={handleCloseHomework}
                                             submissionId={selectedSubmissionId}
                                             name={selectedName}

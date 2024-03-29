@@ -14,6 +14,7 @@ import {
     Input,
     Autocomplete,
     LinearProgress,
+    Chip,
 } from "@mui/material";
 
 import { styled } from "@mui/material/styles";
@@ -21,30 +22,11 @@ import { TextareaAutosize } from "@mui/base/TextareaAutosize";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useNavigate } from "react-router-dom";
 import { ResponsiveContainer } from "recharts";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-
-function sendAssignment(data) {
-    return new Promise((resolve, reject) => {
-        fetch("http://127.0.0.1:5000/assignment", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        })
-            .then((response) => {
-                if (response.ok) {
-                    resolve();
-                } else {
-                    reject(new Error("Network response was not ok."));
-                }
-            })
-            .catch((error) => reject(error));
-    });
-}
+import { type } from "@testing-library/user-event/dist/type";
+import CheckIcon from "@mui/icons-material/Check";
 
 function MarkassignmentPage() {
-    const teacherUsername = localStorage.getItem("teacherUsername") || "DefaultUsername";
+    const teacherUsername = localStorage.getItem("username");
     // State for tabs
     const location = useLocation();
 
@@ -64,6 +46,11 @@ function MarkassignmentPage() {
 
     const navigate = useNavigate();
 
+    const [homeworkTypes, setHomeworkTypes] = useState([]);
+    const [selectedTypes, setSelectedTypes] = useState([]);
+
+    const [openDropdown, setOpenDropdown] = useState(false);
+
     useEffect(() => {
         // Check if the current path is '/Markassignment'
         if (location.pathname === "/Markassignment") {
@@ -71,6 +58,22 @@ function MarkassignmentPage() {
             setSelectedClass("");
             setassignmentTitle("");
             setMarkingRubrics("");
+            setAssignmentDescription("");
+
+            fetch(`http://127.0.0.1:5000/assignment/fetch_types/${teacherUsername}`)
+                .then((response) => {
+                    if (response.ok) {
+                        console.log("okokoko");
+                        return response.json();
+                    } else {
+                        console.log("nonono");
+                        throw new Error("Failed to fetch types");
+                    }
+                })
+                .then((data) => setHomeworkTypes(data))
+                .catch((error) => console.error("Error:", error));
+
+            //setHomeworkTypes([]);
             // Reset other states as needed
         }
     }, [location]);
@@ -85,6 +88,25 @@ function MarkassignmentPage() {
                 }
             })
             .then((data) => setClasses(data))
+            .catch((error) => console.error("Error:", error));
+    }, [teacherUsername]);
+
+    useEffect(() => {
+        fetch(`http://127.0.0.1:5000/assignment/fetch_types/${teacherUsername}`)
+            .then((response) => {
+                if (response.ok) {
+                    console.log("okokoko");
+                    return response.json();
+                } else {
+                    console.log("nonono");
+                    throw new Error("Failed to fetch types");
+                }
+            })
+            .then((data) => {
+                console.log("Types:", data);
+                setHomeworkTypes(data);
+            })
+
             .catch((error) => console.error("Error:", error));
     }, [teacherUsername]);
 
@@ -129,39 +151,19 @@ function MarkassignmentPage() {
         return students.every((student) => uploadStatuses[student._id] === "success");
     };
 
-    const handleBeforeUnload = (event) => {
-        event.preventDefault();
-        handleBack(); // Call the same function used for the Back button
-        return (event.returnValue = "Are you sure you want to exit?");
-    };
-    const handleBack = () => {
-        setIsassignmentCreated(false);
-        const dataToDelete = {
-            class: selectedClass,
-            assignment_title: assignmentTitle,
-        };
-        fetch("http://127.0.0.1:5000/delete_assignment", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(dataToDelete),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                console.log(data.message);
-            })
-            .catch((error) => console.error("Error:", error));
-    };
-
     const [students, setStudents] = useState([]);
 
     const handleSelectedClassChange = async (e) => {
         const c = e.target.value;
         setSelectedClass(c);
+        console.log(assignmentTitle);
 
         setassignmentTitle("");
+        console.log(assignmentTitle);
+        setTitles([]);
         setMarkingRubrics("");
+        setAssignmentDescription("");
+        setSelectedTypes([]);
 
         const data = await fetch(`http://127.0.0.1:5000/assignment/${c}`).then((d) => {
             return d.json();
@@ -180,14 +182,30 @@ function MarkassignmentPage() {
         }
 
         if (!t) {
+            setassignmentTitle("");
+            setAssignmentDescription("");
+            setMarkingRubrics("");
+            setSelectedTypes([]);
             return;
         }
 
-        console.log(t);
-
         setassignmentTitle(t);
-        setMarkingRubrics("");
-        setAssignmentDescription("");
+
+        try {
+            // Fetch the type for the assignment title
+            const typeResponse = await fetch(`http://127.0.0.1:5000/assignment/fetch_type_by_title/${t}`);
+            if (typeResponse.ok) {
+                const typeData = await typeResponse.json();
+
+                //setSelectedTypes(typeData.type);
+                setSelectedTypes(typeData.type || []);
+                console.log(typeData.type);
+            } else {
+                console.error("Failed to fetch assignment type");
+            }
+        } catch (e) {
+            console.error("Error fetching assignment type:", e);
+        }
 
         try {
             const data = await fetch(`http://127.0.0.1:5000/assignment/fetch_description_by_title/${t}`).then((d) => {
@@ -230,6 +248,7 @@ function MarkassignmentPage() {
         const assignmentData = {
             class: selectedClass,
             title: assignmentTitle,
+            type: selectedTypes,
             description: assignmentDescription,
             rubrics: markingRubrics,
         };
@@ -294,25 +313,6 @@ function MarkassignmentPage() {
 
         navigate("/GradesDisplay", { state: { assignmentId: assignmentId } });
     };
-    useEffect(() => {
-        window.addEventListener("beforeunload", handleBeforeUnload);
-
-        return () => {
-            window.removeEventListener("beforeunload", handleBeforeUnload);
-        };
-    }, [selectedClass, assignmentTitle]);
-
-    const VisuallyHiddenInput = styled("input")({
-        clip: "rect(0 0 0 0)",
-        clipPath: "inset(50%)",
-        height: 1,
-        overflow: "hidden",
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        whiteSpace: "nowrap",
-        width: 1,
-    });
 
     const renderUploadProgress = (status) => {
         let progressComponent;
@@ -332,26 +332,26 @@ function MarkassignmentPage() {
         }
         return <Box sx={{ width: "100%" }}>{progressComponent}</Box>;
     };
-    const FileInput = ({ student, onFileSelect }) => (
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-            <input
-                accept=".pdf" // Specify file types if needed
-                style={{ display: "none" }} // Hide the default input
-                id={`raised-button-file-${student._id}`}
-                multiple
-                type="file"
-                onChange={onFileSelect}
-            />
-            <label htmlFor={`raised-button-file-${student._id}`}>
-                <Button variant="outlined" component="span" startIcon={<CloudUploadIcon />} sx={{ marginRight: 2 }}>
-                    Choose File
-                </Button>
-            </label>
-            <Typography variant="body2" noWrap>
-                {student.file && student.file.name}
-            </Typography>
-        </Box>
-    );
+
+    const handleTypesChange = (event, newValue) => {
+        // Ensure that we only store strings in the selectedTypes state
+        const newSelectedTypes = newValue.map((type) => (typeof type === "string" ? type : type.title));
+        setSelectedTypes(newSelectedTypes);
+    };
+
+    const handleOpenDropdown = () => {
+        if (!openDropdown) {
+            setOpenDropdown(true);
+        }
+    };
+
+    const handleCloseDropDown = (event, reason) => {
+        if (reason === "selectOption") {
+            setOpenDropdown(true);
+        } else {
+            setOpenDropdown(false);
+        }
+    };
 
     return (
         <div>
@@ -366,6 +366,7 @@ function MarkassignmentPage() {
                         justifyContent: "center",
                         mx: 15,
                         my: 5,
+                        gap: 2,
                     }}
                 >
                     <div className="titleContainer">Mark Homework</div>
@@ -390,6 +391,8 @@ function MarkassignmentPage() {
                         id="combo-box-demo"
                         options={titles}
                         fullWidth
+                        margin="normal"
+                        key={selectedClass}
                         onChange={handleassignmentTitleChange}
                         onInputChange={(event, newInputValue) => {
                             // Update your state with the newInputValue
@@ -398,8 +401,69 @@ function MarkassignmentPage() {
                         disabled={isassignmentCreated}
                         renderInput={(params) => <TextField {...params} label="Title" />}
                     />
+
+                    <Autocomplete
+                        fullWidth
+                        multiple
+                        freeSolo
+                        id="homework-type-tags"
+                        options={homeworkTypes.map((option) => (typeof option === "string" ? option : option.title))}
+                        value={selectedTypes}
+                        open={openDropdown}
+                        onOpen={handleOpenDropdown}
+                        onClose={handleCloseDropDown}
+                        onChange={(event, newValue) => {
+                            setSelectedTypes(newValue);
+                        }}
+                        disabled={isassignmentCreated}
+                        filterOptions={(options, params) => {
+                            const filtered = options.filter((option) => {
+                                // Ensure that option is a string before calling toLowerCase
+                                return typeof option === "string"
+                                    ? option.toLowerCase().includes(params.inputValue.toLowerCase())
+                                    : false;
+                            });
+
+                            // Add an option to add a new type
+                            const isExisting = options.some(
+                                (option) =>
+                                    typeof option === "string" &&
+                                    option.toLowerCase() === params.inputValue.toLowerCase()
+                            );
+                            if (params.inputValue !== "" && !isExisting) {
+                                filtered.push(params.inputValue);
+                            }
+
+                            return filtered;
+                        }}
+                        selectOnFocus
+                        clearOnBlur
+                        handleHomeEndKeys
+                        getOptionLabel={(option) => {
+                            // When creating a new tag, "option" is a string of the new tag's label
+                            // For pre-existing tags, "option" is the tag object with a "title" property
+                            return typeof option === "string" ? option : option.title;
+                        }}
+                        renderOption={(props, option, { selected }) => (
+                            <li {...props} style={{ backgroundColor: selected ? "#f4f4f4" : "#fff" }}>
+                                {selected ? <CheckIcon style={{ marginRight: 8 }} /> : null}
+                                {option.title || option}
+                            </li>
+                        )}
+                        renderTags={(tagValue, getTagProps) =>
+                            // "tagValue" is an array of all selected tags
+                            tagValue.map((option, index) => (
+                                <Chip
+                                    label={typeof option === "string" ? option : option.title}
+                                    {...getTagProps({ index })}
+                                />
+                            ))
+                        }
+                        renderInput={(params) => <TextField {...params} label="Homework Types" />}
+                    />
+
                     <TextField
-                        label="Assignment Description"
+                        label="Homework Description"
                         value={assignmentDescription}
                         onChange={handleAssignmentDescriptionChange}
                         variant="outlined"

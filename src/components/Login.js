@@ -93,10 +93,11 @@ const Login = ({ setLoggedIn }) => {
                 console.log("Success:", data);
                 if (data.status === "success") {
                     localStorage.setItem("role", data.role);
+                    localStorage.setItem("username", data.username);
+
                     if (data.role === "admin") {
                         navigate("/Admin"); // Navigate to Admin on success
                     } else {
-                        localStorage.setItem("teacherUsername", username);
                         navigate("/MarkHomework"); // Navigate to MarkHomework on success
                     }
                     setLoggedIn(true);
