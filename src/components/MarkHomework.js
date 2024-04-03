@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import { ResponsiveContainer } from "recharts";
 import { type } from "@testing-library/user-event/dist/type";
 import CheckIcon from "@mui/icons-material/Check";
+import { TextareaAutosize as BaseTextareaAutosize } from "@mui/base/TextareaAutosize";
 
 function MarkassignmentPage() {
     const teacherUsername = localStorage.getItem("username");
@@ -353,6 +354,21 @@ function MarkassignmentPage() {
         }
     };
 
+    useEffect(() => {
+        window.addEventListener("error", (e) => {
+            if (e.message === "ResizeObserver loop completed with undelivered notifications.") {
+                const resizeObserverErrDiv = document.getElementById("webpack-dev-server-client-overlay-div");
+                const resizeObserverErr = document.getElementById("webpack-dev-server-client-overlay");
+                if (resizeObserverErr) {
+                    resizeObserverErr.setAttribute("style", "display: none");
+                }
+                if (resizeObserverErrDiv) {
+                    resizeObserverErrDiv.setAttribute("style", "display: none");
+                }
+            }
+        });
+    }, []);
+
     return (
         <div>
             <ResponsiveContainer>
@@ -473,11 +489,13 @@ function MarkassignmentPage() {
                         InputProps={{
                             inputComponent: TextareaAutosize,
                             inputProps: {
+                                maxRows: 7,
                                 minRows: 3,
                                 style: { resize: "vertical" },
                             },
                         }}
                     />
+
                     <TextField
                         label="Marking Rubrics"
                         value={markingRubrics}
@@ -489,6 +507,7 @@ function MarkassignmentPage() {
                         InputProps={{
                             inputComponent: TextareaAutosize,
                             inputProps: {
+                                maxRows: 7,
                                 minRows: 3,
                                 style: { resize: "vertical" },
                             },
