@@ -66,9 +66,9 @@ function GradesDisplay() {
                     .then((data) => setGrades(data))
                     .catch((error) => console.error("Error fetching grades:", error));
 
-                await fetch(`http://127.0.0.1:5000/assignment/get_homework_text_by_submissionId/${grades.submissionId}`)
-                    .then((response) => response.json())
-                    .catch((error) => console.error("Error fetching grades:", error));
+                // await fetch(`http://127.0.0.1:5000/assignment/get_homework_text_by_submissionId/${grades.submissionId}`)
+                //     .then((response) => response.json())
+                //     .catch((error) => console.error("Error fetching grades:", error));
                 const response1 = await fetch(
                     `http://127.0.0.1:5000/assignment/get_class_by_assignmentid/${assignmentId}`
                 );

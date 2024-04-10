@@ -1,208 +1,11 @@
-// import React, { useState } from "react";
-// import {
-//     Typography,
-//     Tab,
-//     Tabs,
-//     Box,
-//     TextField,
-//     Autocomplete,
-//     Paper,
-//     List,
-//     ListItem,
-//     ListItemText,
-//     FormControl,
-//     InputLabel,
-//     Select,
-//     MenuItem,
-// } from "@mui/material";
-// import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-// import TabPanel from "./ClassPerformanceComponents/TabPanel";
-
-// function a11yProps(index) {
-//     return {
-//         id: `simple-tab-${index}`,
-//         "aria-controls": `simple-tabpanel-${index}`,
-//     };
-// }
-
-// const SearchPastMarkings = ({ onSearch }) => {
-//     const [searchTerm, setSearchTerm] = useState("");
-
-//     return (
-//         <Box sx={{ my: 4 }}>
-//             <Typography variant="h6">Search Past Markings</Typography>
-//             <TextField
-//                 fullWidth
-//                 label="Search by homework title, student name, or class"
-//                 value={searchTerm}
-//                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 onKeyPress={(e) => {
-//                     if (e.key === "Enter") {
-//                         onSearch(searchTerm);
-//                         e.preventDefault();
-//                     }
-//                 }}
-//                 margin="normal"
-//             />
-//         </Box>
-//     );
-// };
-
-// const dummyAssignmentData = [
-//     { name: "Assignment 1", averageGrade: 70 },
-//     { name: "Assignment 2", averageGrade: 85 },
-//     { name: "Assignment 3", averageGrade: 75 },
-//     // ...add more assignments
-// ];
-
-// const topStudents = [
-//     { name: "Student A", score: 95 },
-//     { name: "Student B", score: 90 },
-//     // ...add more top students
-// ];
-
-// const lowStudents = [
-//     { name: "Student X", score: 50 },
-//     { name: "Student Y", score: 55 },
-//     // ...add more low performing students
-// ];
-
-// const ClassPerformance = () => {
-//     const [value, setValue] = useState(0);
-
-//     const handleChange = (event, newValue) => {
-//         setValue(newValue);
-//     };
-//     const [selectedClass, setSelectedClass] = useState("");
-//     const dummyTypes = ["Essay", "Multiple Choice", "Project", "Oral Presentation"];
-
-//     const [assignmentTypes, setAssignmentTypes] = useState(dummyTypes);
-//     const [selectedType, setSelectedType] = useState(dummyTypes[0]);
-
-//     const handleTypeChange = (event) => {
-//         setSelectedType(event.target.value);
-//         // Handle the chart update based on the selected type
-//         // This is where you would integrate real API call later on
-//     };
-
-//     // Fetch average grades for selected class from API and update dummyAssignmentData
-//     // fetchAverageGrades(selectedClass).then(data => setAssignmentData(data));
-
-//     // Fetch top and low performing students for selected class from API
-//     // fetchPerformance(selectedClass).then(data => { setTopStudents(data.top); setLowStudents(data.low); });
-
-//     const handleSearch = (searchTerm) => {
-//         // Perform search based on searchTerm
-//         // Call an API function like fetchSearchResults(searchTerm)
-//         console.log(`Search for: ${searchTerm}`);
-//         // Update state based on search results
-//     };
-
-//     return (
-//         <Box sx={{ width: "100%" }}>
-//             <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-//                 <Tabs value={value} onChange={handleChange} aria-label="class performance tabs">
-//                     <Tab label="Class Performance" {...a11yProps(0)} />
-//                     <Tab label="Top Performing Students" {...a11yProps(1)} />
-//                     <Tab label="Students Needing Improvement" {...a11yProps(2)} />
-//                     <Tab label="Search Past Markings" {...a11yProps(3)} />
-//                 </Tabs>
-//             </Box>
-//             <TabPanel value={value} index={0}>
-//                 <Typography variant="h4" gutterBottom>
-//                     Class Performance
-//                 </Typography>
-//                 <Autocomplete
-//                     options={["Class 1A", "Class 1B", "Class 2A", "Class 2B"]} // Replace with real class data from API
-//                     renderInput={(params) => <TextField {...params} label="Select Class" />}
-//                     value={selectedClass}
-//                     onChange={(event, newValue) => {
-//                         setSelectedClass(newValue);
-//                         // Call API to fetch data for selected class
-//                     }}
-//                     fullWidth
-//                     style={{ marginBottom: "20px" }}
-//                 />
-//                 <Paper elevation={3} sx={{ p: 2 }}>
-//                     <Typography variant="h6" gutterBottom>
-//                         Average Grades of Past Assignments
-//                     </Typography>
-//                     <FormControl fullWidth sx={{ mt: 2, mb: 2 }}>
-//                         <InputLabel id="assignment-type-select-label">Assignment Type</InputLabel>
-//                         <Select
-//                             labelId="assignment-type-select-label"
-//                             id="assignment-type-select"
-//                             value={selectedType}
-//                             label="Assignment Type"
-//                             onChange={handleTypeChange}
-//                         >
-//                             {assignmentTypes.map((type, index) => (
-//                                 <MenuItem key={index} value={type}>
-//                                     {type}
-//                                 </MenuItem>
-//                             ))}
-//                         </Select>
-//                     </FormControl>
-//                     {/* BarChart to visualize average grades for each assignment */}
-//                     <BarChart width={600} height={300} data={dummyAssignmentData} type={selectedType}>
-//                         <CartesianGrid strokeDasharray="3 3" />
-//                         <XAxis dataKey="name" />
-//                         <YAxis />
-//                         <Tooltip />
-//                         <Legend />
-//                         <Bar dataKey="averageGrade" fill="#82ca9d" />
-//                     </BarChart>
-//                     <Typography variant="body2">{/* Add comments where necessary for API integration */}</Typography>
-//                 </Paper>
-//             </TabPanel>
-
-//             <TabPanel value={value} index={1}>
-//                 {/* Top performing students list here */}
-//                 <Paper elevation={3} sx={{ p: 2, my: 2 }}>
-//                     <Typography variant="h6" gutterBottom>
-//                         Top Performing Students
-//                     </Typography>
-//                     <List>
-//                         {topStudents.map((student, index) => (
-//                             <ListItem key={index}>
-//                                 <ListItemText primary={student.name} secondary={`Score: ${student.score}`} />
-//                             </ListItem>
-//                         ))}
-//                     </List>
-//                 </Paper>
-//             </TabPanel>
-//             <TabPanel value={value} index={2}>
-//                 {/* Students needing improvement list here */}
-//                 <Paper elevation={3} sx={{ p: 2, my: 2 }}>
-//                     <Typography variant="h6" gutterBottom>
-//                         Students Needing Improvement
-//                     </Typography>
-//                     <List>
-//                         {lowStudents.map((student, index) => (
-//                             <ListItem key={index}>
-//                                 <ListItemText primary={student.name} secondary={`Score: ${student.score}`} />
-//                             </ListItem>
-//                         ))}
-//                     </List>
-//                 </Paper>
-//             </TabPanel>
-//             <TabPanel value={value} index={3}>
-//                 {/* Search past markings here */}
-//                 <SearchPastMarkings onSearch={handleSearch} />
-//             </TabPanel>
-//         </Box>
-//     );
-// };
-
-// export default ClassPerformance;
-
-import React, { useState } from "react";
-import { Typography, Box, Tabs, Tab } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Typography, Box, Tabs, Tab, TextField, MenuItem } from "@mui/material";
 import TabPanel from "./ClassPerformanceComponents/TabPanel";
 import AverageGrades from "./ClassPerformanceComponents/AverageGrades";
 import TopPerforming from "./ClassPerformanceComponents/TopPerforming";
 import LowPerforming from "./ClassPerformanceComponents/LowPerforming";
 import SearchPast from "./ClassPerformanceComponents/SearchPast";
+import { ResponsiveContainer } from "recharts";
 
 function a11yProps(index) {
     return {
@@ -213,9 +16,38 @@ function a11yProps(index) {
 
 const ClassPerformance = () => {
     const [value, setValue] = useState(0);
+    const teacherUsername = localStorage.getItem("username");
+    const [classes, setClasses] = useState([]);
+    const [selectedClass, setSelectedClass] = useState("");
+
+    useEffect(() => {
+        fetch(`http://127.0.0.1:5000/teacher/${teacherUsername}`)
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error("Failed to fetch classes");
+                }
+            })
+            .then((data) => {
+                // Set classes data
+                setClasses(data);
+                setSelectedClass(data[0]); // Assuming 'classId' is the attribute you want to use
+                console.log("Classes:", data);
+                // Check if the data array is not empty and if selectedClass is not already set
+                // if (data.length > 0 && !selectedClass) {
+                //     setSelectedClass(data[0]); // Assuming 'classId' is the attribute you want to use
+                // }
+            })
+            .catch((error) => console.error("Error:", error));
+    }, [teacherUsername]);
 
     const handleChange = (event, newValue) => {
         setValue(newValue);
+    };
+    const handleSelectedClassChange = async (event) => {
+        console.log("Selected class:", event.target.value);
+        setSelectedClass(event.target.value);
     };
 
     // Placeholders for data that would come from an API call
@@ -239,28 +71,74 @@ const ClassPerformance = () => {
     };
 
     return (
-        <Box sx={{ width: "100%" }}>
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <ResponsiveContainer>
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    width: "90%",
+                    mx: 8,
+                    my: 2,
+                }}
+            >
                 <Tabs value={value} onChange={handleChange} aria-label="class performance tabs">
-                    <Tab label="Class Performance" {...a11yProps(0)} />
-                    <Tab label="Top Performing Students" {...a11yProps(1)} />
-                    <Tab label="Students Needing Improvement" {...a11yProps(2)} />
-                    <Tab label="Search Past Markings" {...a11yProps(3)} />
+                    <Tab label="Dashbaord" {...a11yProps(0)} />
+                    <Tab label="Student List" {...a11yProps(1)} />
                 </Tabs>
+
+                <TextField
+                    select
+                    label="Class"
+                    value={selectedClass}
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    onChange={handleSelectedClassChange}
+                >
+                    {classes.map((className) => (
+                        <MenuItem key={className} value={className}>
+                            {className}
+                        </MenuItem>
+                    ))}
+                </TextField>
+                <TabPanel value={value} index={0}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            flexWrap: "wrap",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: 2, // This adds space between the child elements
+                        }}
+                    >
+                        {/* AverageGrades on the left, we allow it to grow but also have a maximum width */}
+                        <Box sx={{ flexGrow: 1, flexBasis: "0", maxWidth: "calc(50% - 2px)" }}>
+                            <AverageGrades selectedClass={selectedClass} />
+                        </Box>
+
+                        {/* This Box acts as a container for the right side elements */}
+                        <Box sx={{ flexGrow: 1, flexBasis: "0", maxWidth: "calc(50% - 2px)" }}>
+                            {/* TopPerforming at the top right */}
+                            <Box sx={{ flexGrow: 1 }}>
+                                <TopPerforming selectedClass={selectedClass} />
+                            </Box>
+
+                            {/* LowPerforming at the bottom right */}
+                            <Box sx={{ flexGrow: 1, mt: 2 }}>
+                                {" "}
+                                {/* Adding margin top for spacing */}
+                                <LowPerforming selectedClass={selectedClass} />
+                            </Box>
+                        </Box>
+                    </Box>
+                </TabPanel>
+                <TabPanel value={value} index={1}>
+                    <SearchPast selectedClass={selectedClass} />
+                </TabPanel>
             </Box>
-            <TabPanel value={value} index={0}>
-                <AverageGrades />
-            </TabPanel>
-            <TabPanel value={value} index={1}>
-                <TopPerforming topPerformingStudents={dummyTopPerformingStudents} />
-            </TabPanel>
-            <TabPanel value={value} index={2}>
-                <LowPerforming lowPerformingStudents={dummyLowPerformingStudents} />
-            </TabPanel>
-            <TabPanel value={value} index={3}>
-                <SearchPast onSearch={handleSearch} />
-            </TabPanel>
-        </Box>
+        </ResponsiveContainer>
     );
 };
 

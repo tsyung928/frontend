@@ -15,6 +15,7 @@ import {
     Autocomplete,
     LinearProgress,
     Chip,
+    CircularProgress,
 } from "@mui/material";
 
 import { styled } from "@mui/material/styles";
@@ -52,6 +53,9 @@ function MarkassignmentPage() {
 
     const [openDropdown, setOpenDropdown] = useState(false);
 
+    const [isMarking, setIsMarking] = useState(false);
+    const [markingMessage, setMarkingMessage] = useState("");
+
     useEffect(() => {
         // Check if the current path is '/Markassignment'
         if (location.pathname === "/Markassignment") {
@@ -64,10 +68,8 @@ function MarkassignmentPage() {
             fetch(`http://127.0.0.1:5000/assignment/fetch_types/${teacherUsername}`)
                 .then((response) => {
                     if (response.ok) {
-                        console.log("okokoko");
                         return response.json();
                     } else {
-                        console.log("nonono");
                         throw new Error("Failed to fetch types");
                     }
                 })
@@ -287,12 +289,15 @@ function MarkassignmentPage() {
     };
 
     const startMarking = async () => {
+        setIsMarking(true); // Start loading
+        setMarkingMessage("Marking in process..."); // Set message
+
         // Construct the payload
         const payload = {
             assignmentId: assignmentId,
             class: selectedClass,
         };
-        console.log("start");
+
         try {
             const response = await fetch("http://127.0.0.1:5000/start-marking", {
                 method: "POST",
@@ -308,8 +313,13 @@ function MarkassignmentPage() {
 
             const result = await response.json();
             console.log(result);
+            // If you navigate away right after receiving the response,
+            // users won't see the success message. Consider navigating away later or updating the message to indicate completion.
         } catch (error) {
             console.error("Failed to start marking:", error);
+            setMarkingMessage("Failed to start marking."); // Set failure message
+        } finally {
+            setIsMarking(false); // End loading
         }
 
         navigate("/GradesDisplay", { state: { assignmentId: assignmentId } });
@@ -567,15 +577,18 @@ function MarkassignmentPage() {
                                 </List>
                             </Box>
 
-                            <Box sx={{ display: "flex" }}>
+                            <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
                                 <Button
                                     variant="contained"
-                                    sx={{ mt: 2 }}
                                     onClick={startMarking}
-                                    disabled={!allUploadsSuccessful()}
+                                    disabled={!allUploadsSuccessful() || isMarking}
                                 >
                                     Start Marking
                                 </Button>
+                                {isMarking && <CircularProgress size={24} sx={{ ml: 2 }} />}
+                                <Typography variant="body2" sx={{ ml: 2 }}>
+                                    {markingMessage}
+                                </Typography>
                             </Box>
                         </>
                     )}
