@@ -9,6 +9,7 @@ const Navbar = ({ logout }) => {
     const isMobile = useMediaQuery("(max-width:600px)");
     const role = localStorage.getItem("role");
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+    const nonMobilePages = ["Mark Homework", "Class Performance"].filter((page) => role !== "admin");
 
     const handleMobileMenuClose = () => {
         setMobileMoreAnchorEl(null);
@@ -17,9 +18,14 @@ const Navbar = ({ logout }) => {
     const handleMobileMenuOpen = (event) => {
         setMobileMoreAnchorEl(event.currentTarget);
     };
+    const mobilePages = ["Mark Homework", "Class Performance", "Profile", "Logout"].filter((page) => {
+        if (role === "admin") {
+            return !["Mark Homework", "Class Performance"].includes(page);
+        }
+        return true;
+    });
 
     const handleMarkHomeworkClick = () => {
-        // This will force a re-render of the MarkHomework component
         console.log("Mark Homework clicked");
         if (window.location.pathname === "/markhomework") {
             navigate("/refresh");
@@ -30,67 +36,29 @@ const Navbar = ({ logout }) => {
     };
 
     const handleLogout = () => {
-        // Placeholder for actual logout logic
-        // e.g., setLoggedIn(false) if you're passing a logout function down as a prop
         logout();
 
-        navigate("/"); // Redirect to the login page or home page after logging out
+        navigate("/");
     };
 
     const mobileMenuId = "primary-search-account-menu-mobile";
-
-    const renderMobileMenu = (
-        <Menu
-            anchorEl={mobileMoreAnchorEl}
-            anchorOrigin={{
-                vertical: "top",
-                horizontal: "left",
-            }}
-            id={mobileMenuId}
-            keepMounted
-            transformOrigin={{
-                vertical: "top",
-                horizontal: "left",
-            }}
-            open={isMobileMenuOpen}
-            onClose={handleMobileMenuClose}
-        >
-            {["Mark Homework", "Class Performance", "Profile", "Logout"].map((item) => (
-                <MenuItem
-                    key={item}
-                    onClick={() => {
-                        handleMobileMenuClose();
-                        if (item === "Logout") {
-                            handleLogout();
-                        } else {
-                            navigate(`/${item.toLowerCase().replace(/ /g, "")}`);
-                        }
-                    }}
-                >
-                    <Typography textAlign="center">{item}</Typography>
-                </MenuItem>
-            ))}
-        </Menu>
-    );
 
     return (
         <AppBar position="static">
             <Toolbar>
                 {!isMobile && (
                     <Box sx={{ flexGrow: 1, display: "flex" }}>
-                        {["Mark Homework", "Class Performance"].map((page) => {
-                            return (
-                                <Button
-                                    key={page}
-                                    sx={{ my: 2, color: "white", display: "block" }}
-                                    onClick={page === "Mark Homework" ? handleMarkHomeworkClick : null}
-                                    component={page !== "Mark Homework" ? RouterLink : null}
-                                    to={`/${page.toLowerCase().replace(/ /g, "")}`}
-                                >
-                                    {page}
-                                </Button>
-                            );
-                        })}
+                        {nonMobilePages.map((page) => (
+                            <Button
+                                key={page}
+                                sx={{ my: 2, color: "white", display: "block" }}
+                                onClick={page === "Mark Homework" ? handleMarkHomeworkClick : null}
+                                component={page !== "Mark Homework" ? RouterLink : null}
+                                to={`/${page.toLowerCase().replace(/ /g, "")}`}
+                            >
+                                {page}
+                            </Button>
+                        ))}
                     </Box>
                 )}
                 {isMobile && (
@@ -111,11 +79,7 @@ const Navbar = ({ logout }) => {
                             <Button
                                 key={page}
                                 sx={{ my: 2, color: "white", display: "block" }}
-                                onClick={() => {
-                                    if (page === "Logout") {
-                                        handleLogout();
-                                    }
-                                }}
+                                onClick={page === "Logout" ? handleLogout : null}
                                 component={page !== "Logout" ? RouterLink : null}
                                 to={page !== "Logout" ? `/${page.toLowerCase()}` : null}
                             >
@@ -125,7 +89,39 @@ const Navbar = ({ logout }) => {
                     </Box>
                 )}
             </Toolbar>
-            {isMobile && renderMobileMenu}
+            {isMobile && (
+                <Menu
+                    anchorEl={mobileMoreAnchorEl}
+                    anchorOrigin={{
+                        vertical: "top",
+                        horizontal: "left",
+                    }}
+                    id={mobileMenuId}
+                    keepMounted
+                    transformOrigin={{
+                        vertical: "top",
+                        horizontal: "left",
+                    }}
+                    open={isMobileMenuOpen}
+                    onClose={handleMobileMenuClose}
+                >
+                    {mobilePages.map((item) => (
+                        <MenuItem
+                            key={item}
+                            onClick={() => {
+                                handleMobileMenuClose();
+                                if (item === "Logout") {
+                                    handleLogout();
+                                } else {
+                                    navigate(`/${item.toLowerCase().replace(/ /g, "")}`);
+                                }
+                            }}
+                        >
+                            <Typography textAlign="center">{item}</Typography>
+                        </MenuItem>
+                    ))}
+                </Menu>
+            )}
         </AppBar>
     );
 };

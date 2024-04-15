@@ -147,7 +147,7 @@ const Profile = () => {
 
                     {role === "teacher" && (
                         <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                            Classes: {classes.join(", ")}
+                            Classes Teaching: {classes.join(", ")}
                         </Typography>
                     )}
                     <TextField

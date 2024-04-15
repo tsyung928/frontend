@@ -16,7 +16,34 @@ const StudentForm = ({ onSubmit }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(studentData);
+        // POST request to backend using fetch API
+        fetch("http://127.0.0.1:5000/add-student", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(studentData),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then((data) => {
+                // Handle the response data from the server
+                console.log(data);
+                if (data.error) {
+                    alert(`Error: ${data.error}`);
+                } else {
+                    alert(`Success: ${data.message}`);
+                    // Reset form after successful submission
+                    setStudentData({ studentName: "", class: "", studentNumber: "" });
+                }
+            })
+            .catch((error) => {
+                console.error("There was an error!", error);
+            });
     };
 
     return (
